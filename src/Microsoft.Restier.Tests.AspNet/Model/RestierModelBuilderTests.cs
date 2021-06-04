@@ -3,7 +3,7 @@
 
 using System.Linq;
 using System.Threading.Tasks;
-using CloudNimble.Breakdance.Restier;
+using Microsoft.Restier.Breakdance;
 using FluentAssertions;
 using Microsoft.OData.Edm;
 using Microsoft.OData.Edm.Validation;
@@ -21,9 +21,10 @@ namespace Microsoft.Restier.Tests.AspNet.Model
         public async Task ComplexTypeShoudWork()
         {
             var model = await RestierTestHelpers.GetTestableModelAsync<LibraryApi, LibraryContext>();
-
-            model.Validate(out var errors).Should().BeTrue();
+            model.Should().NotBeNull();
+            var result = model.Validate(out var errors);
             errors.Should().BeEmpty();
+            result.Should().BeTrue();
 
             var address = model.FindDeclaredType("Microsoft.Restier.Tests.Shared.Scenarios.Library.Address") as IEdmComplexType;
             address.Should().NotBeNull();
@@ -47,7 +48,7 @@ namespace Microsoft.Restier.Tests.AspNet.Model
             propertyArray[i++].Type.AsPrimitive().IsBinary().Should().BeTrue();
             propertyArray[i++].Type.AsPrimitive().IsBoolean().Should().BeTrue();
             propertyArray[i++].Type.AsPrimitive().IsByte().Should().BeTrue();
-            propertyArray[i++].Type.AsPrimitive().IsDate().Should().BeTrue();
+            // propertyArray[i++].Type.AsPrimitive().IsDate().Should().BeTrue();
             propertyArray[i++].Type.AsPrimitive().IsDateTimeOffset().Should().BeTrue();
             propertyArray[i++].Type.AsPrimitive().IsDecimal().Should().BeTrue();
             propertyArray[i++].Type.AsPrimitive().IsDouble().Should().BeTrue();

@@ -4,7 +4,9 @@
 using Microsoft.OData.Edm;
 using Microsoft.Restier.Core.Operation;
 using Microsoft.Restier.Core.Submit;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.Restier.Core
 {
@@ -32,29 +34,29 @@ namespace Microsoft.Restier.Core
         /// <summary>
         /// The <see cref="RestierPipelineState"/> to exclude from Filter name processing.
         /// </summary>
-        private static List<RestierPipelineState> ExcludedFilterStates = new List<RestierPipelineState>
+        private static readonly RestierPipelineState[] ExcludedFilterStates = new RestierPipelineState[]
         {
             RestierPipelineState.Authorization,
             RestierPipelineState.PreSubmit,
-            RestierPipelineState.PostSubmit
+            RestierPipelineState.PostSubmit,
         };
 
         /// <summary>
         /// The <see cref="RestierEntitySetOperation"/> to exclude from EntitySet Submit name processing.
         /// </summary>
-        private static List<RestierEntitySetOperation> ExcludedEntitySetSubmitOperations = new List<RestierEntitySetOperation>
+        private static readonly RestierEntitySetOperation[] ExcludedEntitySetSubmitOperations = new RestierEntitySetOperation[]
         {
             RestierEntitySetOperation.Insert,
             RestierEntitySetOperation.Update,
-            RestierEntitySetOperation.Delete
+            RestierEntitySetOperation.Delete,
         };
 
         /// <summary>
         /// The <see cref="RestierOperationMethod"/> to exclude from Method Submit name processing.
         /// </summary>
-        private static List<RestierOperationMethod> ExcludedMethodSubmitOperations = new List<RestierOperationMethod>
+        private static readonly RestierOperationMethod[] ExcludedMethodSubmitOperations = new RestierOperationMethod[]
         {
-            RestierOperationMethod.Execute
+            RestierOperationMethod.Execute,
         };
 
         #endregion
@@ -73,7 +75,7 @@ namespace Microsoft.Restier.Core
         {
             if ( entitySet == null
                 || (operation == RestierEntitySetOperation.Filter && ExcludedFilterStates.Contains(restierPipelineState))
-                || restierPipelineState == RestierPipelineState.Submit && ExcludedEntitySetSubmitOperations.Contains(operation))
+                || (restierPipelineState == RestierPipelineState.Submit && ExcludedEntitySetSubmitOperations.Contains(operation)))
             {
                 return string.Empty;
             }
@@ -100,7 +102,7 @@ namespace Microsoft.Restier.Core
         {
             if (item == null
                 || (item.EntitySetOperation == RestierEntitySetOperation.Filter && ExcludedFilterStates.Contains(restierPipelineState))
-                || restierPipelineState == RestierPipelineState.Submit && ExcludedEntitySetSubmitOperations.Contains(item.EntitySetOperation))
+                || (restierPipelineState == RestierPipelineState.Submit && ExcludedEntitySetSubmitOperations.Contains(item.EntitySetOperation)))
             {
                 return string.Empty;
             }
@@ -231,7 +233,7 @@ namespace Microsoft.Restier.Core
                 case RestierPipelineState.PreSubmit:
                 case RestierPipelineState.PostSubmit:
                     //RWM: If the last letter of the string is an e, cut off it's head.
-                    return operation.LastIndexOf("e") == operation.Length - 1 ? operation.Substring(0, operation.Length - 1) : operation;
+                    return operation.LastIndexOf("e", StringComparison.InvariantCulture) == operation.Length - 1 ? operation.Substring(0, operation.Length - 1) : operation;
                 default:
                     return operation;
             }

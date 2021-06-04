@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using CloudNimble.Breakdance.Restier;
 using CloudNimble.Breakdance.WebApi;
 using FluentAssertions;
+using Microsoft.Restier.Breakdance;
 using Microsoft.Restier.Tests.Shared;
 using Microsoft.Restier.Tests.Shared.Scenarios.Library;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -15,15 +15,17 @@ namespace Microsoft.Restier.Tests.AspNet.FeatureTests
     public class ActionTests : RestierTestBase
     {
 
-        [Ignore]
+        //[Ignore]
         [TestMethod]
         public async Task ActionParameters_MissingParameter()
         {
             var response = await RestierTestHelpers.ExecuteTestRequest<LibraryApi, LibraryContext>(HttpMethod.Post, resource: "/CheckoutBook");
-            var content = await response.Content.ReadAsStringAsync();
-            TestContext.WriteLine(content);
+            var content = await TestContext.LogAndReturnMessageContentAsync(response);
+
             response.IsSuccessStatusCode.Should().BeFalse();
-            content.Should().Contain("ArgumentNullException");
+
+            content.Should().Contain("NullReferenceException");
+            //content.Should().Contain("ArgumentNullException");
         }
 
         [TestMethod]
@@ -39,9 +41,10 @@ namespace Microsoft.Restier.Tests.AspNet.FeatureTests
             };
 
             var response = await RestierTestHelpers.ExecuteTestRequest<LibraryApi, LibraryContext>(HttpMethod.Post, resource: "/CheckoutBook", acceptHeader: WebApiConstants.DefaultAcceptHeader, payload: bookPayload);
-            var content = await response.Content.ReadAsStringAsync();
-            TestContext.WriteLine(content);
+            var content = await TestContext.LogAndReturnMessageContentAsync(response);
+
             response.IsSuccessStatusCode.Should().BeFalse();
+
             content.Should().Contain("Model state is not valid");
         }
 
@@ -58,9 +61,10 @@ namespace Microsoft.Restier.Tests.AspNet.FeatureTests
             };
 
             var response = await RestierTestHelpers.ExecuteTestRequest<LibraryApi, LibraryContext>(HttpMethod.Post, resource: "/CheckoutBook", acceptHeader: WebApiConstants.DefaultAcceptHeader, payload: bookPayload);
-            var content = await response.Content.ReadAsStringAsync();
-            TestContext.WriteLine(content);
+            var content = await TestContext.LogAndReturnMessageContentAsync(response);
+
             response.IsSuccessStatusCode.Should().BeTrue();
+
             content.Should().Contain("Robert McLaws");
             content.Should().Contain("| Submitted");
         }

@@ -2,12 +2,14 @@
 // Licensed under the MIT License.  See License.txt in the project root for license information.
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace System
 {
-    internal static partial class TypeExtensions
+    internal static class TypeExtensions
     {
+
         private const BindingFlags QualifiedMethodBindingFlags = BindingFlags.NonPublic |
                                                                  BindingFlags.Static |
                                                                  BindingFlags.Instance |
@@ -71,8 +73,21 @@ namespace System
             return null;
         }
 
+        /// <summary>
+        /// Gets a non-public method on a type by it's qualified name.
+        /// </summary>
+        /// <param name="type">The type to get the method in.</param>
+        /// <param name="methodName">The name of the method.</param>
+        /// <returns>A <see cref="MethodInfo"/> instance or null if the MethodInfo is not found.</returns>
         public static MethodInfo GetQualifiedMethod(this Type type, string methodName) => type.GetMethod(methodName, QualifiedMethodBindingFlags);
 
+        /// <summary>
+        /// Tries to get the element type for a type by looking for an <see cref="IEnumerable{T}"/> implementation.
+        /// </summary>
+        /// <remarks>Does not return char for a string.</remarks>
+        /// <param name="type">The type to inspect.</param>
+        /// <param name="elementType">The extracted element type.</param>
+        /// <returns>True when an Element Type was found, false otherwise.</returns>
         public static bool TryGetElementType(this Type type, out Type elementType)
         {
             // Special case: string implements IEnumerable<char> however it should
@@ -99,6 +114,18 @@ namespace System
             return type.IsGenericType &&
                    type.GetGenericTypeDefinition() == definition;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        internal static List<FieldInfo> GetConstants(this Type type)
+        {
+            return type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                .Where(fi => fi.IsLiteral && !fi.IsInitOnly).ToList();
+        }
+
     }
 
     internal static class TypeHelper

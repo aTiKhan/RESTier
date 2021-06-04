@@ -10,7 +10,7 @@
     </Description>
     <PackageTags>$(PackageTags);webapi;batch</PackageTags>
 
-    <TargetFrameworks>net462;net472</TargetFrameworks>
+    <TargetFrameworks>net472</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,14 +20,15 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Ben.Demystifier" Version="[0.1.4, 2.0.0)" />
-    <PackageReference Include="Microsoft.AspNet.OData" Version="[7.2.1, 8.0.0)" />
+    <PackageReference Include="Ben.Demystifier" Version="[0.3.0, 2.0.0)" />
+    <PackageReference Include="Microsoft.AspNet.OData" Version="[7.5.7, 8.0.0)" />
     <PackageReference Include="Microsoft.AspNet.WebApi" Version="[5.2.7, 6.0.0)" />
+    <PackageReference Include="Microsoft.OData.Core" Version="[7.8.3, 8.0.0)" />
+    <PackageReference Include="Microsoft.OData.Edm" Version="[7.8.3, 8.0.0)" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Restier.Core\Microsoft.Restier.Core.csproj" />
-    <ProjectReference Include="..\Microsoft.Restier.EntityFramework\Microsoft.Restier.EntityFramework.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,7 +48,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="Microsoft.CodeQuality.Analyzers" Version="[2.9.3, 3.0.0)" />
+    <PackageReference Update="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.1" />
   </ItemGroup>
+
+  <Import Project="..\Microsoft.Restier.AspNet.Shared\Microsoft.Restier.AspNet.Shared.projitems" Label="Shared" />
 
 </Project>

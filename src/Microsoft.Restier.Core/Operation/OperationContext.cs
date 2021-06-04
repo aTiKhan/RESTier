@@ -4,7 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Net.Http;
 
 namespace Microsoft.Restier.Core.Operation
 {
@@ -41,6 +40,9 @@ namespace Microsoft.Restier.Core.Operation
             IEnumerable bindingParameterValue)
             : base(api)
         {
+            Ensure.NotNull(getParameterValueFunc, nameof(getParameterValueFunc));
+            Ensure.NotNullOrWhiteSpace(operationName, nameof(operationName));
+
             GetParameterValueFunc = getParameterValueFunc;
             OperationName = operationName;
             IsFunction = isFunction;
@@ -76,10 +78,5 @@ namespace Microsoft.Restier.Core.Operation
 #pragma warning disable CA2227 // Collection properties should be read only
         public ICollection<object> ParameterValues { get; set; }
 #pragma warning restore CA2227 // Collection properties should be read only
-
-        /// <summary>
-        /// Gets or sets the http request for this operation call
-        /// </summary>
-        public HttpRequestMessage Request { get; set; } // TODO: RWM: Move to ApiBase.
     }
 }

@@ -75,6 +75,10 @@ namespace Microsoft.Restier.Core.Submit
             {
                 return context.Result;
             }
+            else if (context.ChangeSet == null)
+            {
+                throw new InvalidOperationException(Resources.NoPendingChangedAndNoChangeSet);
+            }
 
             var eventsChangeSet = context.ChangeSet;
 
@@ -106,15 +110,15 @@ namespace Microsoft.Restier.Core.Submit
                     string message = null;
                     if (dataModification.EntitySetOperation == RestierEntitySetOperation.Insert)
                     {
-                        message = Resources.NoPermissionToInsertEntity;
+                        message = Resources.PermissionToInsertDenied;
                     }
                     else if (dataModification.EntitySetOperation == RestierEntitySetOperation.Update)
                     {
-                        message = Resources.NoPermissionToUpdateEntity;
+                        message = Resources.PermissionToUpdateDenied;
                     }
                     else if (dataModification.EntitySetOperation == RestierEntitySetOperation.Delete)
                     {
-                        message = Resources.NoPermissionToDeleteEntity;
+                        message = Resources.PermissionToDeleteDenied;
                     }
                     else
                     {

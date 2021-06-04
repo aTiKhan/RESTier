@@ -3,6 +3,8 @@
 
 using System;
 using System.Linq;
+using Microsoft.AspNet.OData;
+using Microsoft.AspNet.OData.Query;
 using Microsoft.Restier.AspNet.Model;
 using Microsoft.Restier.EntityFramework;
 
@@ -16,42 +18,15 @@ namespace Microsoft.Restier.Tests.Shared.Scenarios.Library
     public class LibraryApi : EntityFrameworkApi<LibraryContext>
     {
 
+        #region Constructors
+
         public LibraryApi(IServiceProvider serviceProvider) : base(serviceProvider)
         {
         }
 
-        [Operation]
-        public Book PublishBook(bool IsActive)
-        {
-            Console.WriteLine($"IsActive = {IsActive}");
-            return new Book
-            {
-                Id = Guid.NewGuid(),
-                Title = "The Cat in the Hat"
-            };
-        }
+        #endregion
 
-        [Operation]
-        public Book PublishBooks(int Count)
-        {
-            Console.WriteLine($"Count = {Count}");
-            return new Book
-            {
-                Id = Guid.NewGuid(),
-                Title = "The Cat in the Hat Comes Back"
-            };
-        }
-
-        [Operation]
-        public Book SubmitTransaction(Guid Id)
-        {
-            Console.WriteLine($"Id = {Id}");
-            return new Book
-            {
-                Id = Id,
-                Title = "Atlas Shrugged"
-            };
-        }
+        #region API Methods
 
         [Operation(OperationType = OperationType.Action, EntitySet = "Books")]
         public Book CheckoutBook(Book book)
@@ -79,6 +54,123 @@ namespace Microsoft.Restier.Tests.Shared.Scenarios.Library
             });
             return books;
         }
+
+        [Operation]
+        [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.All)]
+        public IQueryable<Book> FavoriteBooks()
+        {
+            var publisher = new Publisher
+            {
+                Id = "123",
+                Addr = new Address
+                {
+                    Street = "Publisher Way",
+                    Zip = "12345"
+                }
+            };
+
+            foreach (var book in new Book[]
+            {
+                new Book
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "The Cat in the Hat Comes Back",
+                    Publisher = publisher
+                },
+                new Book
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "If You Give a Mouse a Cookie",
+                    Publisher = publisher
+                }
+            })
+            {
+                publisher.Books.Add(book);
+            }
+
+            return publisher.Books.AsQueryable();
+        }
+
+        [Operation]
+        public Book PublishBook(bool IsActive)
+        {
+            Console.WriteLine($"IsActive = {IsActive}");
+            return new Book
+            {
+                Id = Guid.NewGuid(),
+                Title = "The Cat in the Hat"
+            };
+        }
+
+        [Operation]
+        public Book PublishBooks(int Count)
+        {
+            Console.WriteLine($"Count = {Count}");
+            return new Book
+            {
+                Id = Guid.NewGuid(),
+                Title = "The Cat in the Hat Comes Back"
+            };
+        }
+
+        [Operation(IsBound = true, OperationType = OperationType.Action)]
+        public Publisher PublishNewBook(Publisher publisher, Guid bookId)
+        {
+            var book = DbContext.Set<Book>().Find(bookId);
+
+            publisher.Books.Add(book);
+            DbContext.SaveChanges();
+
+            return publisher;
+        }
+
+        [Operation(IsBound = true, IsComposable = true, EntitySet = "publisher/Books")]
+        public IQueryable<Book> PublishedBooks(Publisher publisher)
+        {
+            var test = publisher.Id;
+            return FavoriteBooks();
+        }
+
+        [Operation]
+        public Book SubmitTransaction(Guid Id)
+        {
+            Console.WriteLine($"Id = {Id}");
+            return new Book
+            {
+                Id = Id,
+                Title = "Atlas Shrugged"
+            };
+        }
+
+        #endregion
+
+        #region Restier Interceptors
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected internal bool CanUpdateEmployee() => false;
+
+        protected internal void OnExecutingDiscontinueBooks(IQueryable<Book> books)
+        {
+            books.ToList().ForEach(c =>
+            {
+                Console.WriteLine($"Id = {c.Id}");
+                c.Title += " | Intercepted";
+            });
+        }
+
+        protected internal void OnExecutedDiscontinueBooks(IQueryable<Book> books)
+        {
+            books.ToList().ForEach(c =>
+            {
+                Console.WriteLine($"Id = {c.Id}");
+                c.Title += " | Intercepted";
+            });
+        }
+
+        #endregion
 
     }
 

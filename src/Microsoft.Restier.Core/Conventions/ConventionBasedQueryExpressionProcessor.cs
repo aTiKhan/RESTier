@@ -16,16 +16,16 @@ namespace Microsoft.Restier.Core
     /// </summary>
     public class ConventionBasedQueryExpressionProcessor : IQueryExpressionProcessor
     {
-        private Type targetType;
+        private readonly Type targetApiType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConventionBasedQueryExpressionProcessor"/> class.
         /// </summary>
-        /// <param name="targetType">The target type to check for filter functions.</param>
-        public ConventionBasedQueryExpressionProcessor(Type targetType)
+        /// <param name="targetApiType">The target type to check for filter functions.</param>
+        public ConventionBasedQueryExpressionProcessor(Type targetApiType)
         {
-            Ensure.NotNull(targetType, nameof(targetType));
-            this.targetType = targetType;
+            Ensure.NotNull(targetApiType, nameof(targetApiType));
+            this.targetApiType = targetApiType;
         }
 
         /// <summary>
@@ -40,10 +40,10 @@ namespace Microsoft.Restier.Core
 
             if (Inner != null)
             {
-                var innerFilteredExpression = Inner.Process(context);
-                if (innerFilteredExpression != null && innerFilteredExpression != context.VisitedNode)
+                var innerProcessedExpression = this.Inner.Process(context);
+                if (innerProcessedExpression != null && innerProcessedExpression != context.VisitedNode)
                 {
-                    return innerFilteredExpression;
+                    return innerProcessedExpression;
                 }
             }
 
@@ -88,7 +88,7 @@ namespace Microsoft.Restier.Core
                     entityType = (IEdmEntityType)entityType.BaseType;
                 }
 
-                //Get the model, query it for the entity set of a given type.
+                // Get the model, query it for the entity set of a given type.
                 var entitySet = context.QueryContext.Model.EntityContainer.EntitySets().FirstOrDefault(c => c.EntityType() == entityType);
                 if (entitySet == null)
                 {
@@ -104,22 +104,23 @@ namespace Microsoft.Restier.Core
         private Expression AppendOnFilterExpression(QueryExpressionContext context, IEdmEntitySet entitySet, IEdmEntityType entityType)
         {
             var expectedMethodName = ConventionBasedMethodNameFactory.GetEntitySetMethodName(entitySet, RestierPipelineState.Submit, RestierEntitySetOperation.Filter);
-            var expectedMethod = targetType.GetQualifiedMethod(expectedMethodName);
+            var expectedMethod = targetApiType.GetQualifiedMethod(expectedMethodName);
             if (expectedMethod == null || (!expectedMethod.IsFamily && !expectedMethod.IsFamilyOrAssembly))
             {
                 if (expectedMethod != null)
                 {
-                    Debug.WriteLine($"Restier Filter found '{expectedMethodName}' but it is unaccessible due to its protection level. Change it to be 'protected internal'.");
+                    Trace.WriteLine($"Restier Filter found '{expectedMethodName}' but it is unaccessible due to its protection level. Your method will not be called until you change it to 'protected internal'.");
                 }
                 else
                 {
                     var actualMethodName = expectedMethodName.Replace(entitySet.Name, entityType.Name);
-                    var actualMethod = targetType.GetQualifiedMethod(actualMethodName);
+                    var actualMethod = targetApiType.GetQualifiedMethod(actualMethodName);
                     if (actualMethod != null)
                     {
-                        Debug.WriteLine($"BREAKING: Restier Filter expected'{expectedMethodName}' but found '{actualMethodName}'. Please correct the method name.");
+                        Trace.WriteLine($"BREAKING: Restier Filter expected'{expectedMethodName}' but found '{actualMethodName}'. Your method will not be called until you correct the method name.");
                     }
                 }
+
                 return null;
             }
 
@@ -133,7 +134,7 @@ namespace Microsoft.Restier.Core
             if (!expectedMethod.IsStatic)
             {
                 apiBase = context.QueryContext.Api;
-                if (apiBase == null || !targetType.IsInstanceOfType(apiBase))
+                if (apiBase == null || !targetApiType.IsInstanceOfType(apiBase))
                 {
                     return null;
                 }

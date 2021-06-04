@@ -38,11 +38,18 @@ namespace Microsoft.Restier.EntityFramework
                 throw new ArgumentNullException(nameof(context));
             }
 
-            var dbContext = context.GetApiService<DbContext>();
+            if (context.Api is not IEntityFrameworkApi frameworkApi)
+            {
+                // Not an EF Api.
+                return;
+            }
+
+            var dbContextType = frameworkApi.ContextType;
+            var dbContext = frameworkApi.DbContext;
 
             foreach (var entry in context.ChangeSet.Entries.OfType<DataModificationItem>())
             {
-                var strongTypedDbSet = dbContext.GetType().GetProperty(entry.ResourceSetName).GetValue(dbContext);
+                var strongTypedDbSet = dbContextType.GetProperty(entry.ResourceSetName).GetValue(dbContext);
                 var resourceType = strongTypedDbSet.GetType().GetGenericArguments()[0];
 
                 // This means request resource is sub type of resource type

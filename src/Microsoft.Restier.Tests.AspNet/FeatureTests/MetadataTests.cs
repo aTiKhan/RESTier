@@ -1,9 +1,9 @@
 ﻿using System.Data.Entity;
 using System.IO;
 using System.Threading.Tasks;
-using CloudNimble.Breakdance.Restier;
+using CloudNimble.Breakdance.Assemblies;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Restier.Breakdance;
 using Microsoft.Restier.Tests.Shared;
 using Microsoft.Restier.Tests.Shared.Scenarios.Library;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -17,38 +17,21 @@ namespace Microsoft.Restier.Tests.AspNet.FeatureTests
 
         #region Private Members
 
-        private const string relativePath = "..//..//..//Baselines//";
+        private const string relativePath = "..//..//..//..//Microsoft.Restier.Tests.AspNet//";
+        private const string baselineFolder = "Baselines//";
 
         #endregion
 
         #region LibraryApi
 
-        [Ignore]
-        [TestMethod]
-        public async Task LibraryApi_SaveMetadataDocument()
-        {
-            await RestierTestHelpers.WriteCurrentApiMetadata<LibraryApi, LibraryContext>(relativePath);
-            File.Exists($"{relativePath}{typeof(LibraryApi).Name}-ApiMetadata.txt").Should().BeTrue();
-        }
-
-        [Ignore]
-        [TestMethod]
-        public async Task LibraryApi_SaveVisibilityMatrix()
-        {
-            var api = await RestierTestHelpers.GetTestableApiInstance<LibraryApi, LibraryContext>();
-            await api.WriteCurrentVisibilityMatrix(relativePath);
-
-            File.Exists($"{relativePath}{api.GetType().Name}-ApiSurface.txt").Should().BeTrue();
-        }
-
         [TestMethod]
         public async Task LibraryApi_CompareCurrentApiMetadataToPriorRun()
         {
-            var fileName = $"{relativePath}{typeof(LibraryApi).Name}-ApiMetadata.txt";
+            var fileName = $"{Path.Combine(relativePath, baselineFolder)}{typeof(LibraryApi).Name}-ApiMetadata.txt";
             File.Exists(fileName).Should().BeTrue();
 
             var oldReport = File.ReadAllText(fileName);
-            var newReport = await RestierTestHelpers.GetApiMetadata<LibraryApi, LibraryContext>();
+            var newReport = await RestierTestHelpers.GetApiMetadataAsync<LibraryApi, LibraryContext>();
             oldReport.Should().BeEquivalentTo(newReport.ToString());
         }
 
@@ -56,44 +39,42 @@ namespace Microsoft.Restier.Tests.AspNet.FeatureTests
         public async Task LibraryApi_CompareCurrentVisibilityMatrixToPriorRun()
         {
             var api = await RestierTestHelpers.GetTestableApiInstance<LibraryApi, LibraryContext>();
-            var fileName = $"{relativePath}{api.GetType().Name}-ApiSurface.txt";
+            var fileName = $"{Path.Combine(relativePath, baselineFolder)}{api.GetType().Name}-ApiSurface.txt";
 
             File.Exists(fileName).Should().BeTrue();
             var oldReport = File.ReadAllText(fileName);
-            var newReport = await api.GenerateVisibilityMatrix();
+            var newReport = api.GenerateVisibilityMatrix();
             oldReport.Should().BeEquivalentTo(newReport);
+        }
+
+        [BreakdanceManifestGenerator]
+        public async Task LibraryApi_SaveMetadataDocument(string projectPath)
+        {
+            await RestierTestHelpers.WriteCurrentApiMetadata<LibraryApi, LibraryContext>(Path.Combine(projectPath, baselineFolder));
+            File.Exists($"{Path.Combine(projectPath, baselineFolder)}{typeof(LibraryApi).Name}-ApiMetadata.txt").Should().BeTrue();
+        }
+
+        [BreakdanceManifestGenerator]
+        public async Task LibraryApi_SaveVisibilityMatrix(string projectPath)
+        {
+            var api = await RestierTestHelpers.GetTestableApiInstance<LibraryApi, LibraryContext>();
+            api.WriteCurrentVisibilityMatrix(Path.Combine(projectPath, baselineFolder));
+
+            File.Exists($"{Path.Combine(projectPath, baselineFolder)}{api.GetType().Name}-ApiSurface.txt").Should().BeTrue();
         }
 
         #endregion
 
         #region StoreApi
 
-        [Ignore]
-        [TestMethod]
-        public async Task StoreApi_SaveMetadataDocument()
-        {
-            await RestierTestHelpers.WriteCurrentApiMetadata<StoreApi, DbContext>(relativePath);
-            File.Exists($"{relativePath}{typeof(StoreApi).Name}-ApiMetadata.txt").Should().BeTrue();
-        }
-
-        [Ignore]
-        [TestMethod]
-        public async Task StoreApi_SaveVisibilityMatrix()
-        {
-            var api = await RestierTestHelpers.GetTestableApiInstance<StoreApi, DbContext>(serviceCollection: (services) => { services.AddTestStoreApiServices(); });
-            await api.WriteCurrentVisibilityMatrix(relativePath);
-
-            File.Exists($"{relativePath}{api.GetType().Name}-ApiSurface.txt").Should().BeTrue();
-        }
-
         [TestMethod]
         public async Task StoreApi_CompareCurrentApiMetadataToPriorRun()
         {
-            var fileName = $"{relativePath}{typeof(StoreApi).Name}-ApiMetadata.txt";
+            var fileName = $"{Path.Combine(relativePath, baselineFolder)}{typeof(StoreApi).Name}-ApiMetadata.txt";
             File.Exists(fileName).Should().BeTrue();
 
             var oldReport = File.ReadAllText(fileName);
-            var newReport = await RestierTestHelpers.GetApiMetadata<StoreApi, DbContext>(serviceCollection: (services) => { services.AddTestStoreApiServices(); });
+            var newReport = await RestierTestHelpers.GetApiMetadataAsync<StoreApi, DbContext>(serviceCollection: (services) => { services.AddTestStoreApiServices(); });
             oldReport.Should().BeEquivalentTo(newReport.ToString());
         }
 
@@ -101,12 +82,28 @@ namespace Microsoft.Restier.Tests.AspNet.FeatureTests
         public async Task StoreApi_CompareCurrentVisibilityMatrixToPriorRun()
         {
             var api = await RestierTestHelpers.GetTestableApiInstance<StoreApi, DbContext>(serviceCollection: (services) => { services.AddTestStoreApiServices(); });
-            var fileName = $"{relativePath}{api.GetType().Name}-ApiSurface.txt";
+            var fileName = $"{Path.Combine(relativePath, baselineFolder)}{api.GetType().Name}-ApiSurface.txt";
 
             File.Exists(fileName).Should().BeTrue();
             var oldReport = File.ReadAllText(fileName);
-            var newReport = await api.GenerateVisibilityMatrix();
+            var newReport = api.GenerateVisibilityMatrix();
             oldReport.Should().BeEquivalentTo(newReport);
+        }
+
+        [BreakdanceManifestGenerator]
+        public async Task StoreApi_SaveMetadataDocument(string projectPath)
+        {
+            await RestierTestHelpers.WriteCurrentApiMetadata<StoreApi, DbContext>(Path.Combine(projectPath, baselineFolder));
+            File.Exists($"{Path.Combine(projectPath, baselineFolder)}{typeof(StoreApi).Name}-ApiMetadata.txt").Should().BeTrue();
+        }
+
+        [BreakdanceManifestGenerator]
+        public async Task StoreApi_SaveVisibilityMatrix(string projectPath)
+        {
+            var api = await RestierTestHelpers.GetTestableApiInstance<StoreApi, DbContext>(serviceCollection: (services) => { services.AddTestStoreApiServices(); });
+            api.WriteCurrentVisibilityMatrix(Path.Combine(projectPath, baselineFolder));
+
+            File.Exists($"{Path.Combine(projectPath, baselineFolder)}{api.GetType().Name}-ApiSurface.txt").Should().BeTrue();
         }
 
         #endregion

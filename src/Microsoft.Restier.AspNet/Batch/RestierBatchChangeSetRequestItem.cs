@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -19,7 +20,7 @@ namespace Microsoft.Restier.AspNet.Batch
     public class RestierBatchChangeSetRequestItem : ChangeSetRequestItem
     {
         /// <summary>
-        /// An Api
+        /// An Api.
         /// </summary>
         private readonly ApiBase api;
 
@@ -75,7 +76,7 @@ namespace Microsoft.Restier.AspNet.Batch
                                         : t.Exception;
                                     changeSetProperty.Exceptions.Add(taskEx);
                                     changeSetProperty.OnChangeSetCompleted();
-                                    tcs.SetException(taskEx);
+                                    tcs.SetException(taskEx.Demystify());
                                 }
                                 else
                                 {
@@ -123,6 +124,11 @@ namespace Microsoft.Restier.AspNet.Batch
             return new ChangeSetResponseItem(responses);
         }
 
+        /// <summary>
+        /// Asynchronously submits a <see cref="ChangeSet"/>.
+        /// </summary>
+        /// <param name="changeSet">The change set to submit.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
 #pragma warning disable CA1822 // Do not declare static members on generic types
         internal async Task SubmitChangeSet(ChangeSet changeSet)
 #pragma warning restore CA1822 // Do not declare static members on generic types
